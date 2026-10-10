@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status abrufen · Kfz-Meisterwerkstatt Vogel</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="app-header" data-od-id="app-header">
+  <div class="app-header__inner container">
+    <a class="wordmark" href="index.html">
+      <span class="wordmark__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </span>
+      <span>Kfz-Meisterwerkstatt Vogel</span>
+    </a>
+    <nav class="area-switch" aria-label="Bereich wechseln">
+      <a href="index.html" class="is-active" aria-current="page">Kundenbereich</a>
+      <a href="werkstatt-login.html">Werkstatt</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Kundenbereich">
+  <div class="tabs__inner container">
+    <a class="tab" href="index.html">Start</a>
+    <a class="tab" href="termin-anfragen.html">Termin anfragen</a>
+    <a class="tab is-active" href="status-abrufen.html" aria-current="page">Status abrufen</a>
+  </div>
+</nav>
+
+<main class="page" data-od-id="main">
+  <div class="container stack">
+
+    <div class="page-head">
+      <h1 data-od-id="heading-status">Auftragsstatus abrufen</h1>
+      <p>Geben Sie Ihre Auftragsnummer und das Kennzeichen ein.</p>
+    </div>
+
+    <section class="card" aria-label="Statusabfrage" data-od-id="card-lookup">
+      <div class="card__body">
+        <form id="lookup-form" class="form" novalidate>
+          <div class="field">
+            <label class="field__label" for="order">Auftragsnummer</label>
+            <div class="field__control"><input class="input mono" id="order" type="text" value="A-2026-0042" placeholder="A-2026-0042" required></div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field__label" for="lookup-plate">Kennzeichen</label>
+            <div class="field__control"><input class="input mono" id="lookup-plate" type="text" value="B-AB 1234" placeholder="B-AB 1234" required></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn--primary" type="submit" id="lookup-btn" data-od-id="btn-lookup">
+              <span class="spinner hidden" id="lookup-spinner" aria-hidden="true"></span>
+              <span id="lookup-label">Status abrufen</span>
+            </button>
+          </div>
+        </form>
+        <p class="lead">Beispiel zum Ausprobieren: <span class="mono">A-2026-0042</span> mit Kennzeichen <span class="mono">B-AB 1234</span>.</p>
+      </div>
+    </section>
+
+    <section id="result-loading" class="card hidden" aria-hidden="true">
+      <div class="card__body">
+        <div class="skeletons">
+          <div class="skeleton skeleton--60"></div>
+          <div class="skeleton skeleton--100"></div>
+          <div class="skeleton skeleton--80"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result-empty" aria-label="Leerer Zustand" data-od-id="state-empty">
+      <div class="card">
+        <div class="state-panel">
+          <svg class="state-panel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p class="state-panel__title">Noch keine Abfrage</p>
+          <p class="state-panel__desc">Geben Sie Auftragsnummer und Kennzeichen ein, um den Status Ihrer Reparatur zu sehen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="result-error" class="state-panel state-panel--error hidden" role="alert" data-od-id="state-error">
+      <svg class="state-panel__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p class="state-panel__title">Auftragsnummer und Kennzeichen passen nicht zusammen.</p>
+      <p class="state-panel__desc">Bitte prüfen Sie Ihre Eingaben. Aus Datenschutzgründen geben wir keine Auftragsdaten preis.</p>
+      <p class="alert__code">Code: invalid_ticket_lookup</p>
+    </section>
+
+    <div id="result-content" class="stack hidden"></div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner container">
+    <p>© 2026 Kfz-Meisterwerkstatt Vogel</p>
+    <nav class="footer-links" aria-label="Rechtliches">
+      <a href="impressum.html">Impressum</a>
+      <a href="datenschutz.html">Datenschutzerklärung</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var STATUS_ORDER = ['angefragt', 'bestätigt', 'in Arbeit', 'fertig', 'abgeholt'];
+  var STATUS_CLASS = { 'angefragt': 'requested', 'bestätigt': 'confirmed', 'in Arbeit': 'in-progress', 'fertig': 'done', 'abgeholt': 'picked-up' };
+
+  var DATA = [
+    {
+      order: 'A-2026-0042', plate: 'B-AB 1234', vehicle: 'VW Golf 7', status: 'fertig',
+      appointment: '14.10.2026, 09:30',
+      description: 'Motor läuft unrund, Leistungsverlust und erhöhter Verbrauch.',
+      invoiceNumber: 'R-2026-0098',
+      positions: [
+        { name: 'Arbeitszeit: Fehlerdiagnose und Instandsetzung', qty: '2,5 h', unit: '95,00 €/h', totalCents: 23750 },
+        { name: 'Luftfilter', qty: '1', unit: '24,90 €', totalCents: 2490 },
+        { name: 'Zündkerzen', qty: '4', unit: '12,50 €', totalCents: 5000 },
+        { name: 'Motoröl 5W-30', qty: '1', unit: '42,80 €', totalCents: 4280 }
+      ],
+      timeline: [
+        { t: '10.10.2026, 11:20', from: null, to: 'angefragt' },
+        { t: '12.10.2026, 08:10', from: 'angefragt', to: 'bestätigt' },
+        { t: '14.10.2026, 09:30', from: 'bestätigt', to: 'in Arbeit' },
+        { t: '15.10.2026, 16:45', from: 'in Arbeit', to: 'fertig' }
+      ]
+    },
+    {
+      order: 'A-2026-0045', plate: 'B-GH 3456', vehicle: 'Opel Corsa', status: 'angefragt',
+      appointment: '16.10.2026, 08:30',
+      description: 'Bremsen quietschen beim Anhalten, Pedal fühlt sich weich an.',
+      invoiceNumber: null,
+      positions: [],
+      timeline: [
+        { t: '10.10.2026, 11:20', from: null, to: 'angefragt' }
+      ]
+    }
+  ];
+
+  function norm(s) { return (s || '').toUpperCase().replace(/\s+/g, ' ').trim(); }
+  function fmtEUR(cents) {
+    return (cents / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+  function badge(status, dim) {
+    return '<span class="badge badge--' + STATUS_CLASS[status] + (dim ? ' badge--dim' : '') + '"><span class="badge__dot" aria-hidden="true"></span>' + status + '</span>';
+  }
+
+  function stepperHTML(current) {
+    var steps = STATUS_ORDER.map(function (s, i) {
+      var cls = 'stepper__step stepper__step--' + STATUS_CLASS[s];
+      if (i <= current) cls += ' is-reached';
+      if (i === current) cls += ' is-current';
+      return '<li class="' + cls + '"><span class="stepper__dot" aria-hidden="true"></span><span class="stepper__label">' + s + '</span></li>';
+    }).join('');
+    return '<ol class="stepper" aria-label="Fortschritt">' + steps + '</ol>';
+  }
+
+  function timelineHTML(entries) {
+    if (!entries.length) {
+      return '<p class="muted">Noch keine Statuswechsel.</p>';
+    }
+    return '<ol class="timeline">' + entries.slice().reverse().map(function (e) {
+      var from = e.from ? '<span class="status-tag status-tag--' + STATUS_CLASS[e.from] + '">' + e.from + '</span>' : '<span class="muted">angelegt</span>';
+      var to = '<span class="status-tag status-tag--' + STATUS_CLASS[e.to] + '">' + e.to + '</span>';
+      return '<li class="timeline__item"><span class="timeline__dot timeline__dot--' + STATUS_CLASS[e.to] + '" aria-hidden="true"></span>' +
+        '<p class="timeline__time">' + e.t + '</p>' +
+        '<p class="timeline__change">' + from + ' <span class="timeline__arrow" aria-hidden="true">→</span> ' + to + '</p></li>';
+    }).join('') + '</ol>';
+  }
+
+  function invoiceHTML(order) {
+    if (!order.invoiceNumber || !order.positions.length) {
+      return '<p class="muted">Rechnung noch nicht verfügbar.</p>' +
+        '<p class="lead mt-8">Sobald der Auftrag fertiggestellt ist, erscheint hier die Rechnung mit allen Positionen und Beträgen.</p>';
+    }
+    var netto = order.positions.reduce(function (sum, p) { return sum + p.totalCents; }, 0);
+    var tax = Math.round(netto * 0.19);
+    var brutto = netto + tax;
+    var rows = order.positions.map(function (p) {
+      return '<tr><td>' + p.name + '</td>' +
+        '<td class="num" data-label="Menge">' + p.qty + '</td>' +
+        '<td class="num" data-label="Einzelpreis">' + p.unit + '</td>' +
+        '<td class="num" data-label="Gesamt">' + fmtEUR(p.totalCents) + '</td></tr>';
+    }).join('');
+    return '<p class="lead mb-16">Rechnungsnummer <span class="mono">' + order.invoiceNumber + '</span></p>' +
+      '<div class="table-wrap" style="border-radius:8px;"><table class="invoice-table">' +
+      '<thead><tr><th>Bezeichnung</th><th class="num">Menge</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>' +
+      '<div class="amounts">' +
+      '<div class="amounts__row"><span>Nettosumme</span><span class="amount">' + fmtEUR(netto) + '</span></div>' +
+      '<div class="amounts__row"><span>MwSt. (19 %)</span><span class="amount">' + fmtEUR(tax) + '</span></div>' +
+      '<div class="amounts__total"><span>Bruttosumme</span><span class="amount">' + fmtEUR(brutto) + '</span></div>' +
+      '</div>';
+  }
+
+  function contentHTML(order) {
+    var idx = STATUS_ORDER.indexOf(order.status);
+    return '<section class="card"><div class="card__header">' +
+        '<h2 class="card__title mono">' + order.order + '</h2>' + badge(order.status) +
+      '</div><div class="card__body">' +
+        stepperHTML(idx) +
+        '<dl class="contact-grid mt-16">' +
+          '<dt>Kennzeichen</dt><dd class="mono">' + norm(order.plate) + '</dd>' +
+          '<dt>Fahrzeug</dt><dd>' + order.vehicle + '</dd>' +
+          '<dt>Wunschtermin</dt><dd class="num" style="text-align:left;">' + order.appointment + '</dd>' +
+          '<dt>Anliegen</dt><dd>' + order.description + '</dd>' +
+        '</dl>' +
+      '</div></section>' +
+      '<section class="card"><div class="card__header"><h2 class="card__title">Statusverlauf</h2></div>' +
+        '<div class="card__body">' + timelineHTML(order.timeline) + '</div></section>' +
+      '<section class="card"><div class="card__header"><h2 class="card__title">Rechnung</h2></div>' +
+        '<div class="card__body">' + invoiceHTML(order) + '</div></section>';
+  }
+
+  var form = document.getElementById('lookup-form');
+  var btn = document.getElementById('lookup-btn');
+  var spinner = document.getElementById('lookup-spinner');
+  var label = document.getElementById('lookup-label');
+  var empty = document.getElementById('result-empty');
+  var loading = document.getElementById('result-loading');
+  var error = document.getElementById('result-error');
+  var content = document.getElementById('result-content');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var orderVal = document.getElementById('order').value;
+    var plateVal = document.getElementById('lookup-plate').value;
+    if (!orderVal.trim() || !plateVal.trim()) {
+      empty.classList.add('hidden');
+      content.classList.add('hidden');
+      loading.classList.add('hidden');
+      error.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    error.classList.add('hidden');
+    content.classList.add('hidden');
+    loading.classList.remove('hidden');
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+    label.textContent = 'Wird abgerufen …';
+
+    window.setTimeout(function () {
+      loading.classList.add('hidden');
+      btn.disabled = false;
+      spinner.classList.add('hidden');
+      label.textContent = 'Status abrufen';
+      var match = DATA.filter(function (d) {
+        return d.order === orderVal.toUpperCase().trim() && norm(d.plate) === norm(plateVal);
+      })[0];
+      if (!match) {
+        error.classList.remove('hidden');
+        return;
+      }
+      content.innerHTML = contentHTML(match);
+      content.classList.remove('hidden');
+    }, 700);
+  });
+})();
+</script>
+
+</body>
+</html>
