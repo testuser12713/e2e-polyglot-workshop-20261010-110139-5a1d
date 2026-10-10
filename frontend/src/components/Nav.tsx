@@ -7,6 +7,20 @@ interface NavEntry {
   end?: boolean;
 }
 
+// The area switch is the single control that toggles between the two areas
+// (DESIGN.md, AppShell / Navigation). Each segment navigates to the area's
+// entry route: the customer portal at "/" and the workshop area at
+// "/werkstatt", which App.tsx redirects to its default landing
+// (/werkstatt/dashboard) and RequireWorkshopAuth guards, so a visitor without a
+// session lands on the login screen instead of staying put.
+const CUSTOMER_AREA = "/";
+const WORKSHOP_AREA = "/werkstatt";
+
+interface AreaSegment {
+  to: string;
+  label: string;
+}
+
 const CUSTOMER_LINKS: NavEntry[] = [
   { to: "/termin", label: "Termin anfragen" },
   { to: "/auftragsstatus", label: "Auftragsstatus" },
@@ -17,6 +31,15 @@ const WORKSHOP_LINKS: NavEntry[] = [
   { to: "/werkstatt/auftraege", label: "Auftragsliste" },
   { to: "/werkstatt/anmeldung", label: "Anmeldung" },
 ];
+
+const AREA_SEGMENTS: AreaSegment[] = [
+  { to: CUSTOMER_AREA, label: "Kundenbereich" },
+  { to: WORKSHOP_AREA, label: "Werkstatt" },
+];
+
+function segmentClass(active: boolean): string {
+  return active ? "area-switch__segment is-active" : "area-switch__segment";
+}
 
 function tabClass({ isActive }: { isActive: boolean }): string {
   return isActive ? "tab is-active" : "tab";
@@ -36,18 +59,14 @@ export function Nav() {
         </NavLink>
 
         <nav className="area-switch" aria-label="Bereich wählen">
-          <NavLink
-            to="/termin"
-            className={inWorkshop ? "area-switch__segment" : "area-switch__segment is-active"}
-          >
-            Kundenbereich
-          </NavLink>
-          <NavLink
-            to="/werkstatt/dashboard"
-            className={inWorkshop ? "area-switch__segment is-active" : "area-switch__segment"}
-          >
-            Werkstatt
-          </NavLink>
+          {AREA_SEGMENTS.map((segment) => {
+            const active = segment.to === WORKSHOP_AREA ? inWorkshop : !inWorkshop;
+            return (
+              <NavLink key={segment.to} to={segment.to} className={segmentClass(active)}>
+                {segment.label}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="app-header__session">
