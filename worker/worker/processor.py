@@ -92,7 +92,10 @@ def _load_recipient_email(conn: Any, order_id: int) -> str:
     """Look up the customer e-mail an invoice notification is addressed to."""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT c.email FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = %s",
+            "SELECT c.email FROM orders o "
+            "JOIN vehicles v ON v.id = o.vehicle_id "
+            "JOIN customers c ON c.id = v.customer_id "
+            "WHERE o.id = %s",
             (order_id,),
         )
         row = cur.fetchone()

@@ -28,13 +28,13 @@ def save_notification(
     second call for the same invoice is a no-op.
     """
     with conn.cursor() as cur:
-        cur.execute("SELECT id FROM invoices WHERE invoice_number = %s", (invoice_number,))
-        row = cur.fetchone()
-        invoice_id = int(row[0]) if row is not None else None
-
+        # The outbox table has no link to the invoice (the migration owns the
+        # schema). The subject carries the unique order number, so it is the
+        # idempotency key: a redelivered message for the same invoice inserts
+        # nothing the second time.
         cur.execute(
-            "INSERT INTO outbox (invoice_id, recipient_email, subject, body, created_at) "
-            "SELECT %s, %s, %s, %s, now() "
-            "WHERE %s IS NULL OR NOT EXISTS (SELECT 1 FROM outbox WHERE invoice_id = %s)",
-            (invoice_id, recipient_email, subject, body, invoice_id, invoice_id),
+            "INSERT INTO outbox (recipient_email, subject, body, created_at) "
+            "SELECT %s, %s, %s, now() "
+            "WHERE NOT EXISTS (SELECT 1 FROM outbox WHERE subject = %s)",
+            (recipient_email, subject, body, subject),
         )
