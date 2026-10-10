@@ -332,7 +332,7 @@ export function OrderStatusPage() {
         plate: queryPlate,
         code: apiError?.code,
         message: mismatch
-          ? "Bitte prüfen Sie Ihre Eingaben. Aus Datenschutzgründen geben wir keine Auftragsdaten preis."
+          ? "Kein Auftrag zu dieser Kombination gefunden. Bitte prüfen Sie Ihre Eingaben. Aus Datenschutzgründen geben wir keine Auftragsdaten preis."
           : (apiError?.message ?? "Der Status konnte nicht abgerufen werden."),
       });
     }

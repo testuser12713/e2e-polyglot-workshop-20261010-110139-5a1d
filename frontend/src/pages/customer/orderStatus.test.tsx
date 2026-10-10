@@ -66,9 +66,25 @@ describe("OrderStatusPage", () => {
     // The requested date is shown as TT.MM.JJJJ.
     expect(screen.getByText("14.10.2026")).toBeInTheDocument();
 
+    // The client is called with the values typed into the two form fields —
+    // the order number in the path and the plate in the query, exactly as typed.
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
     const calledPath = apiFetchMock.mock.calls[0]?.[0] as string;
-    expect(calledPath).toContain("/api/public/orders/A-2026-0042");
-    expect(calledPath).toContain("plate=B-AB");
+    const [pathname, search] = calledPath.split("?");
+    expect(pathname).toBe("/api/public/orders/A-2026-0042");
+    expect(new URLSearchParams(search).get("plate")).toBe("B-AB 1234");
+  });
+
+  it("renders the status without any customer personal data (AC-30)", async () => {
+    apiFetchMock.mockResolvedValueOnce(makeOrder());
+
+    await submitLookup();
+
+    expect(await screen.findByRole("heading", { name: "A-2026-0042" })).toBeInTheDocument();
+    // The public response carries no name, e-mail or phone and the page renders none.
+    expect(screen.queryByText(/@/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/QA Status Kunde/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/0170/)).not.toBeInTheDocument();
   });
 
   it("renders the error and no order data when the combination does not match", async () => {
@@ -78,9 +94,16 @@ describe("OrderStatusPage", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Auftragsnummer und Kennzeichen passen nicht zusammen.");
+    expect(alert).toHaveTextContent(/kein Auftrag/i);
     expect(alert).toHaveTextContent("not_found");
     expect(screen.queryByText("Statusverlauf")).not.toBeInTheDocument();
     expect(screen.queryByText("Rechnung")).not.toBeInTheDocument();
+
+    // The mismatch lookup still sends the typed order number and plate.
+    const calledPath = apiFetchMock.mock.calls[0]?.[0] as string;
+    const [pathname, search] = calledPath.split("?");
+    expect(pathname).toBe("/api/public/orders/A-2026-9999");
+    expect(new URLSearchParams(search).get("plate")).toBe("B-ZZ 0000");
   });
 
   it("renders the invoice amounts when an invoice exists", async () => {
