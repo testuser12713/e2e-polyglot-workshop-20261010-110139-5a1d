@@ -90,6 +90,25 @@ describe("DashboardPage", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("renders the two list sections below the KPI cards", async () => {
+    mockApiFetch.mockResolvedValue({
+      openCounts: { requested: 0, confirmed: 0, in_progress: 0 },
+      completedToday: 0,
+      monthRevenueGrossCents: 0,
+    });
+
+    renderPage();
+
+    await screen.findByTestId("kpi-requested");
+    const lists = screen.getByRole("region", { name: "Listen" });
+    expect(
+      within(lists).getByRole("heading", { name: "Nächste Wunschtermine" }),
+    ).toBeInTheDocument();
+    expect(
+      within(lists).getByRole("heading", { name: "Heute fertig geworden" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the error state instead of fake zeros when the request fails", async () => {
     mockApiFetch.mockRejectedValue(new ApiError(401, "unauthorized", "Nicht angemeldet."));
 

@@ -150,7 +150,7 @@ export function DashboardPage() {
           <section className="dashboard-lists" aria-label="Listen">
             <article className="card">
               <div className="card__header">
-                <h2 className="card__title">Nächste Wunschtermine</h2>
+                <h2 className="dashboard-card__title">Nächste Wunschtermine</h2>
                 <Link className="btn btn-ghost" to="/werkstatt/auftraege">
                   Alle Aufträge
                 </Link>
@@ -162,7 +162,7 @@ export function DashboardPage() {
 
             <article className="card">
               <div className="card__header">
-                <h2 className="card__title">Heute fertig geworden</h2>
+                <h2 className="dashboard-card__title">Heute fertig geworden</h2>
               </div>
               <p className="dashboard-list-card__body">
                 Diese Übersicht ist noch nicht verfügbar.
