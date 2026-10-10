@@ -106,15 +106,24 @@ describe("app shell", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the customer portal landing on the root path", () => {
+  it("forwards the root path into the customer area's entry route", async () => {
     renderAt("/");
     expect(
-      screen.getByRole("heading", { level: 1, name: "Kundenportal" }),
+      await screen.findByRole("heading", { level: 1, name: "Termin anfragen" }),
     ).toBeInTheDocument();
   });
 });
 
 describe("area switch", () => {
+  it("resolves the Kundenbereich segment to the customer area's entry route", () => {
+    renderAt("/termin");
+    const areaSwitch = screen.getByRole("navigation", { name: "Bereich wählen" });
+    expect(within(areaSwitch).getByRole("link", { name: "Kundenbereich" })).toHaveAttribute(
+      "href",
+      "/termin",
+    );
+  });
+
   it("sends a visitor without a session from the customer area to the workshop login when Werkstatt is clicked", async () => {
     const user = userEvent.setup();
     renderAt("/");
@@ -148,9 +157,13 @@ describe("area switch", () => {
     const user = userEvent.setup();
     renderAt("/werkstatt/dashboard");
     const areaSwitch = screen.getByRole("navigation", { name: "Bereich wählen" });
+    const kundenbereich = within(areaSwitch).getByRole("link", { name: "Kundenbereich" });
+    expect(kundenbereich).toHaveAttribute("href", "/termin");
 
-    await user.click(within(areaSwitch).getByRole("link", { name: "Kundenbereich" }));
+    await user.click(kundenbereich);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Kundenportal" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Termin anfragen" }),
+    ).toBeInTheDocument();
   });
 });
