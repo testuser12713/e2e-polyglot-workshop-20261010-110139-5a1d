@@ -1,4 +1,4 @@
-import { getToken } from "../auth/session";
+import { clearSession, getToken } from "../auth/session";
 
 // The one fetch wrapper for the whole app. Every page module uses apiFetch so
 // that JSON handling, the bearer token and the API's uniform error body live in
@@ -67,6 +67,11 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   if (!response.ok) {
+    // A 401 means the stored token is missing, invalid or expired: drop the
+    // session so the workshop guard re-renders and sends the user to login.
+    if (response.status === 401) {
+      clearSession();
+    }
     const error = (body as { error?: { code?: unknown; message?: unknown } } | null)?.error;
     const code = typeof error?.code === "string" ? error.code : "internal_error";
     const message =

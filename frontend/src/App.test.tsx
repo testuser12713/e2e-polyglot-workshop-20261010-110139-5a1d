@@ -2,16 +2,30 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { App } from "./App";
+import { clearSession, setSession } from "./auth/session";
+
+// The workshop screens sit behind RequireWorkshopAuth; rendering them requires
+// a valid session, which is seeded here and cleared after every test.
+const PROTECTED_PATHS = ["/werkstatt/auftraege", "/werkstatt/auftraege/1", "/werkstatt/dashboard"];
 
 function renderAt(path: string) {
+  if (PROTECTED_PATHS.includes(path)) {
+    setSession("test-token", new Date(Date.now() + 3_600_000).toISOString());
+  } else {
+    clearSession();
+  }
   return render(
     <MemoryRouter initialEntries={[path]}>
       <App />
     </MemoryRouter>,
   );
 }
+
+afterEach(() => {
+  clearSession();
+});
 
 const ROUTES: { path: string; heading: string }[] = [
   { path: "/termin", heading: "Termin anfragen" },
