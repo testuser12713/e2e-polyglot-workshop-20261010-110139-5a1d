@@ -684,6 +684,63 @@ textarea:disabled {
   font-size: 13px;
 }
 
+/* Legal pages (Impressum / Datenschutz) ----------------------------------- */
+
+.legal {
+  max-width: 720px;
+}
+
+.legal h2 {
+  margin-top: var(--space-5);
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.legal p,
+.legal li {
+  margin-top: var(--space-1);
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--color-fg);
+}
+
+.legal ul {
+  margin: var(--space-1) 0 0;
+  padding-left: 20px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.contact-grid dt {
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.contact-grid dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.mt-24 {
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .contact-grid {
+    grid-template-columns: max-content 1fr;
+  }
+}
+
 /* Value / table helpers --------------------------------------------------- */
 
 .mono {
