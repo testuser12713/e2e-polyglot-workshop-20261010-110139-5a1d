@@ -1,0 +1,19 @@
+{
+  "runcontract": 1,
+  "services": [
+    {
+      "name": "web",
+      "dir": "frontend",
+      "stack": "web-vite",
+      "kind": "static",
+      "install": [["npm", "ci"]],
+      "build": [["npm", "run", "build"]],
+      "test": [["npm", "test"]],
+      "serve_dir": "dist",
+      "port": 5173,
+      "env": {
+        "VITE_API_BASE_URL": { "dev": "${service:api.origin}" }
+      }
+    }
+  ]
+}
