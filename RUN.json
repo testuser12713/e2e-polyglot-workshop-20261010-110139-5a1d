@@ -111,6 +111,59 @@
       "name": "queue",
       "kind": "database",
       "engine": "valkey"
+    },
+    {
+      "name": "valkey",
+      "kind": "database",
+      "engine": "valkey"
+    },
+    {
+      "name": "worker",
+      "dir": "worker",
+      "stack": "python",
+      "kind": "worker",
+      "install": [
+        [
+          "${python}",
+          "-m",
+          "pip",
+          "install",
+          "-q",
+          "-r",
+          "requirements.txt"
+        ]
+      ],
+      "start": [
+        "${python}",
+        "-m",
+        "worker.main"
+      ],
+      "test": [
+        [
+          "${python}",
+          "-m",
+          "pytest"
+        ]
+      ],
+      "depends_on": [
+        "db",
+        "valkey"
+      ],
+      "ready_log": "worker ready",
+      "env": {
+        "DATABASE_URL": {
+          "dev": "${service:db.url}"
+        },
+        "VALKEY_URL": {
+          "dev": "${service:valkey.url}"
+        },
+        "QUEUE_NAME": {
+          "dev": "workshop:invoices"
+        },
+        "HOURLY_RATE_CENTS": {
+          "dev": "8900"
+        }
+      }
     }
   ]
 }
