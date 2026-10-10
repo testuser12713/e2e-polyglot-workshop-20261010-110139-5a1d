@@ -21,55 +21,76 @@ pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="DATABASE_URL must be s
 
 HOURLY_RATE_CENTS = 8900
 
+# The schema below mirrors backend/internal/store/migrations.go exactly: the
+# migration is the single source of truth for these tables. The test creates the
+# same tables so it also runs stand-alone against an empty database, and the
+# IF NOT EXISTS clauses make it a no-op when the API has already migrated.
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
-    id serial PRIMARY KEY,
-    name text NOT NULL,
-    email text NOT NULL,
-    phone text NOT NULL
+    id         serial PRIMARY KEY,
+    name       text NOT NULL,
+    email      text NOT NULL,
+    phone      text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS vehicles (
+    id               serial PRIMARY KEY,
+    customer_id      integer NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    plate            text NOT NULL,
+    plate_normalized text NOT NULL UNIQUE,
+    brand            text NOT NULL,
+    model            text NOT NULL,
+    mileage_km       integer NOT NULL DEFAULT 0,
+    created_at       timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS orders (
-    id serial PRIMARY KEY,
-    order_number text NOT NULL UNIQUE,
-    customer_id integer NOT NULL,
-    status text NOT NULL DEFAULT 'completed'
+    id                  serial PRIMARY KEY,
+    order_number        text NOT NULL UNIQUE,
+    vehicle_id          integer NOT NULL REFERENCES vehicles(id),
+    requested_date      date NOT NULL,
+    problem_description text NOT NULL,
+    status              text NOT NULL DEFAULT 'requested'
+        CHECK (status IN ('requested','confirmed','in_progress','completed','picked_up')),
+    created_at          timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS order_items (
-    id serial PRIMARY KEY,
-    order_id integer NOT NULL,
-    kind text NOT NULL,
-    description text NOT NULL,
-    hours numeric,
-    quantity integer,
-    unit_price_cents integer
+    id               serial PRIMARY KEY,
+    order_id         integer NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    kind             text NOT NULL CHECK (kind IN ('labor','part')),
+    description      text NOT NULL,
+    hours            numeric(10,2),
+    quantity         integer,
+    unit_price_cents integer,
+    amount_cents     integer NOT NULL,
+    created_at       timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS invoices (
-    id serial PRIMARY KEY,
-    invoice_number text NOT NULL UNIQUE,
-    order_id integer NOT NULL UNIQUE,
-    net_cents integer NOT NULL,
+    id               serial PRIMARY KEY,
+    invoice_number   text NOT NULL UNIQUE,
+    order_id         integer NOT NULL UNIQUE REFERENCES orders(id),
+    net_cents        integer NOT NULL,
     tax_rate_percent integer NOT NULL,
-    tax_cents integer NOT NULL,
-    gross_cents integer NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now()
+    tax_cents        integer NOT NULL,
+    gross_cents      integer NOT NULL,
+    created_at       timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS invoice_items (
-    id serial PRIMARY KEY,
-    invoice_id integer NOT NULL REFERENCES invoices(id),
-    kind text NOT NULL,
-    description text NOT NULL,
-    hours numeric,
-    quantity integer,
+    id               serial PRIMARY KEY,
+    invoice_id       integer NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+    kind             text NOT NULL,
+    description      text NOT NULL,
+    hours            numeric(10,2),
+    quantity         integer,
     unit_price_cents integer,
-    amount_cents integer NOT NULL
+    amount_cents     integer NOT NULL
 );
 CREATE TABLE IF NOT EXISTS outbox (
-    id serial PRIMARY KEY,
-    invoice_id integer REFERENCES invoices(id),
+    id              serial PRIMARY KEY,
     recipient_email text NOT NULL,
-    subject text NOT NULL,
-    body text NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now()
+    subject         text NOT NULL,
+    body            text NOT NULL,
+    status          text NOT NULL DEFAULT 'pending',
+    created_at      timestamptz NOT NULL DEFAULT now()
 );
 """
 
@@ -91,19 +112,28 @@ def _seed_order(conn: psycopg.Connection, order_number: str) -> int:
         )
         customer_id = cur.fetchone()[0]
         cur.execute(
-            "INSERT INTO orders (order_number, customer_id, status) "
-            "VALUES (%s, %s, 'completed') RETURNING id",
-            (order_number, customer_id),
+            "INSERT INTO vehicles (customer_id, plate, plate_normalized, brand, model, mileage_km) "
+            "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (customer_id, "B-AB 1234", "BAB1234", "VW", "Golf", 120000),
+        )
+        vehicle_id = cur.fetchone()[0]
+        cur.execute(
+            "INSERT INTO orders "
+            "(order_number, vehicle_id, requested_date, problem_description, status) "
+            "VALUES (%s, %s, %s, %s, 'completed') RETURNING id",
+            (order_number, vehicle_id, "2026-01-05", "Inspektion"),
         )
         order_id = cur.fetchone()[0]
         cur.execute(
-            "INSERT INTO order_items (order_id, kind, description, hours, quantity, unit_price_cents) "
-            "VALUES (%s, 'labor', 'Montage', 1.5, NULL, NULL)",
+            "INSERT INTO order_items "
+            "(order_id, kind, description, hours, quantity, unit_price_cents, amount_cents) "
+            "VALUES (%s, 'labor', 'Montage', 1.5, NULL, NULL, 13350)",
             (order_id,),
         )
         cur.execute(
-            "INSERT INTO order_items (order_id, kind, description, hours, quantity, unit_price_cents) "
-            "VALUES (%s, 'part', 'Filter', NULL, 2, 1999)",
+            "INSERT INTO order_items "
+            "(order_id, kind, description, hours, quantity, unit_price_cents, amount_cents) "
+            "VALUES (%s, 'part', 'Filter', NULL, 2, 1999, 3998)",
             (order_id,),
         )
     conn.commit()
@@ -118,7 +148,7 @@ def conn() -> psycopg.Connection:
     try:
         with connection.cursor() as cur:
             cur.execute(
-                "TRUNCATE outbox, invoice_items, invoices, order_items, orders, customers "
+                "TRUNCATE outbox, invoice_items, invoices, order_items, orders, vehicles, customers "
                 "RESTART IDENTITY CASCADE"
             )
         connection.commit()
