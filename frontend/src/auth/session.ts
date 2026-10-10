@@ -77,11 +77,26 @@ function emit(): void {
   for (const listener of listeners) listener();
 }
 
+// The session may exist in storage before this module is evaluated, or be
+// written by a path that never called setSession (another tab, a restored
+// document). Reading it back once the in-memory copy is empty guarantees a
+// session present at the moment of navigation is recognised, instead of the
+// guard being stuck on the empty snapshot captured at import time. The result
+// is cached in `current`, so repeated getSnapshot calls stay referentially
+// stable and React never loops.
+function ensureLoaded(): Session | null {
+  if (current === null) {
+    current = load();
+  }
+  return current;
+}
+
 current = load();
 
 export function getToken(): string | null {
-  if (!current || isExpired(current)) return null;
-  return current.token;
+  const session = ensureLoaded();
+  if (!session || isExpired(session)) return null;
+  return session.token;
 }
 
 export function setSession(token: string, expiresAt: string): void {
@@ -118,5 +133,8 @@ function getSnapshot(): Session | null {
 }
 
 export function useSession(): Session | null {
+  // Fill the in-memory cache before React subscribes, so the store is already
+  // consistent on the first snapshot and does not change during subscription.
+  ensureLoaded();
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
