@@ -6,14 +6,111 @@
       "dir": "frontend",
       "stack": "web-vite",
       "kind": "static",
-      "install": [["npm", "ci"]],
-      "build": [["npm", "run", "build"]],
-      "test": [["npm", "test"]],
+      "install": [
+        [
+          "npm",
+          "ci"
+        ]
+      ],
+      "build": [
+        [
+          "npm",
+          "run",
+          "build"
+        ]
+      ],
+      "test": [
+        [
+          "npm",
+          "test"
+        ]
+      ],
       "serve_dir": "dist",
       "port": 5173,
       "env": {
-        "VITE_API_BASE_URL": { "dev": "${service:api.origin}" }
+        "VITE_API_BASE_URL": {
+          "dev": "${service:api.origin}"
+        }
       }
+    },
+    {
+      "name": "api",
+      "dir": "backend",
+      "stack": "go",
+      "kind": "server",
+      "install": [
+        [
+          "go",
+          "mod",
+          "download"
+        ]
+      ],
+      "build": [
+        [
+          "go",
+          "build",
+          "./..."
+        ]
+      ],
+      "test": [
+        [
+          "go",
+          "test",
+          "./..."
+        ]
+      ],
+      "start": [
+        "go",
+        "run",
+        "./cmd/api"
+      ],
+      "port": 8000,
+      "port_env": "HTTP_PORT",
+      "ready_timeout_s": 60,
+      "health": {
+        "path": "/api/health",
+        "expect_status": [
+          200
+        ]
+      },
+      "env": {
+        "DATABASE_URL": {
+          "dev": "${service:db.url}"
+        },
+        "VALKEY_URL": {
+          "dev": "${service:queue.url}"
+        },
+        "QUEUE_NAME": {
+          "dev": "workshop:invoices"
+        },
+        "HTTP_PORT": {
+          "dev": "8000"
+        },
+        "JWT_SECRET": {
+          "generate": "hex",
+          "bytes": 32
+        },
+        "SEED_EMPLOYEE_EMAIL": {
+          "dev": "chef@workshop.local"
+        },
+        "SEED_EMPLOYEE_PASSWORD": {
+          "generate": "hex",
+          "bytes": 16
+        },
+        "CORS_ORIGIN": {
+          "dev": "${service:web.origin}"
+        }
+      }
+    },
+    {
+      "name": "db",
+      "kind": "database",
+      "engine": "postgres"
+    },
+    {
+      "name": "queue",
+      "kind": "database",
+      "engine": "valkey"
     }
   ]
 }
