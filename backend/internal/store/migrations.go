@@ -106,7 +106,15 @@ var schemaStatements = []string{
 	`CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoice_items(invoice_id)`,
 }
 
-// Migrate creates the complete schema. It is safe to run on every start.
+// migrateLockKey is the advisory-lock key that serialises concurrent Migrate
+// calls. Without it two processes migrating at once can both pass the
+// "IF NOT EXISTS" check and then collide creating the same table.
+const migrateLockKey int64 = 7362871301
+
+// Migrate creates the complete schema. It is safe to run on every start and
+// safe to run concurrently: the whole migration takes a transaction-level
+// advisory lock, so a second caller waits and then sees the schema already
+// present instead of racing it.
 func Migrate(ctx context.Context, pool Pool) error {
 	if pool == nil {
 		return fmt.Errorf("migrate: nil pool")
@@ -116,6 +124,10 @@ func Migrate(ctx context.Context, pool Pool) error {
 		return fmt.Errorf("migrate: begin: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1)`, migrateLockKey); err != nil {
+		return fmt.Errorf("migrate: acquire lock: %w", err)
+	}
 
 	for i, stmt := range schemaStatements {
 		if _, err := tx.Exec(ctx, stmt); err != nil {
