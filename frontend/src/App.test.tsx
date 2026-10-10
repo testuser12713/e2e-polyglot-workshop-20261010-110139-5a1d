@@ -113,3 +113,44 @@ describe("app shell", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("area switch", () => {
+  it("sends a visitor without a session from the customer area to the workshop login when Werkstatt is clicked", async () => {
+    const user = userEvent.setup();
+    renderAt("/");
+    const areaSwitch = screen.getByRole("navigation", { name: "Bereich wählen" });
+    const werkstatt = within(areaSwitch).getByRole("link", { name: "Werkstatt" });
+    expect(werkstatt).toHaveAttribute("href", "/werkstatt");
+
+    await user.click(werkstatt);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Anmeldung Werkstatt" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the workshop area for a signed-in employee when Werkstatt is clicked", async () => {
+    const user = userEvent.setup();
+    setSession("test-token", new Date(Date.now() + 3_600_000).toISOString());
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const areaSwitch = screen.getByRole("navigation", { name: "Bereich wählen" });
+    await user.click(within(areaSwitch).getByRole("link", { name: "Werkstatt" }));
+
+    expect(screen.getByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
+  });
+
+  it("switches from the workshop area back to the customer area", async () => {
+    const user = userEvent.setup();
+    renderAt("/werkstatt/dashboard");
+    const areaSwitch = screen.getByRole("navigation", { name: "Bereich wählen" });
+
+    await user.click(within(areaSwitch).getByRole("link", { name: "Kundenbereich" }));
+
+    expect(screen.getByRole("heading", { level: 1, name: "Kundenportal" })).toBeInTheDocument();
+  });
+});
