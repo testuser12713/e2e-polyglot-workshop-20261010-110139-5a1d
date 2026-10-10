@@ -106,10 +106,10 @@ describe("app shell", () => {
     ).toBeInTheDocument();
   });
 
-  it("redirects the root path to the customer appointment page", () => {
+  it("renders the customer portal landing on the root path", () => {
     renderAt("/");
     expect(
-      screen.getByRole("heading", { level: 1, name: "Termin anfragen" }),
+      screen.getByRole("heading", { level: 1, name: "Kundenportal" }),
     ).toBeInTheDocument();
   });
 });

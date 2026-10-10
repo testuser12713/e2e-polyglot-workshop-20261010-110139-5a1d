@@ -1,0 +1,56 @@
+/* Customer portal landing page — layout only, every value is a DESIGN.md token. */
+
+.portal-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr;
+}
+
+.portal-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.portal-card-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.portal-lead {
+  color: var(--color-muted);
+}
+
+.portal-section-title {
+  margin-bottom: var(--space-3);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.portal-overview-label {
+  margin-bottom: var(--space-1);
+  color: var(--color-fg);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.portal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .portal-grid--2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .portal-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

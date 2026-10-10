@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ErrorState } from "./components/states";
 import { RequireWorkshopAuth } from "./auth/RequireWorkshopAuth";
+import { PortalPage } from "./pages/customer/PortalPage";
 import { AppointmentPage } from "./pages/customer/AppointmentPage";
 import { OrderStatusPage } from "./pages/customer/OrderStatusPage";
 import { LoginPage } from "./pages/workshop/LoginPage";
@@ -28,7 +29,7 @@ export function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/termin" replace />} />
+        <Route index element={<PortalPage />} />
 
         <Route path="/termin" element={<AppointmentPage />} />
         <Route path="/auftragsstatus" element={<OrderStatusPage />} />
