@@ -1,0 +1,101 @@
+import "@testing-library/jest-dom/vitest";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it } from "vitest";
+import { App } from "./App";
+
+function renderAt(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>,
+  );
+}
+
+const ROUTES: { path: string; heading: string }[] = [
+  { path: "/termin", heading: "Termin anfragen" },
+  { path: "/auftragsstatus", heading: "Auftragsstatus" },
+  { path: "/werkstatt/anmeldung", heading: "Anmeldung Werkstatt" },
+  { path: "/werkstatt/auftraege", heading: "Auftragsliste" },
+  { path: "/werkstatt/auftraege/1", heading: "Auftragsdetail" },
+  { path: "/werkstatt/dashboard", heading: "Dashboard" },
+  { path: "/impressum", heading: "Impressum" },
+  { path: "/datenschutz", heading: "Datenschutzerklärung" },
+];
+
+describe("app shell", () => {
+  it("renders the primary navigation with the customer and workshop entries", () => {
+    renderAt("/termin");
+    const nav = screen.getByRole("navigation", { name: "Hauptnavigation" });
+    for (const label of [
+      "Termin anfragen",
+      "Auftragsstatus",
+      "Anmeldung",
+      "Auftragsliste",
+      "Dashboard",
+    ]) {
+      expect(within(nav).getByRole("link", { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it.each(ROUTES)("route $path is reachable and renders its heading", ({ path, heading }) => {
+    renderAt(path);
+    expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
+  });
+
+  it.each(ROUTES)("shows the footer with both legal links on $path", ({ path }) => {
+    renderAt(path);
+    const footer = screen.getByRole("navigation", { name: "Rechtliches" });
+    expect(within(footer).getByRole("link", { name: "Impressum" })).toHaveAttribute(
+      "href",
+      "/impressum",
+    );
+    expect(within(footer).getByRole("link", { name: "Datenschutzerklärung" })).toHaveAttribute(
+      "href",
+      "/datenschutz",
+    );
+  });
+
+  it("links each primary-navigation entry to its own route", () => {
+    renderAt("/termin");
+    const nav = screen.getByRole("navigation", { name: "Hauptnavigation" });
+    expect(within(nav).getByRole("link", { name: "Termin anfragen" })).toHaveAttribute(
+      "href",
+      "/termin",
+    );
+    expect(within(nav).getByRole("link", { name: "Auftragsstatus" })).toHaveAttribute(
+      "href",
+      "/auftragsstatus",
+    );
+    expect(within(nav).getByRole("link", { name: "Anmeldung" })).toHaveAttribute(
+      "href",
+      "/werkstatt/anmeldung",
+    );
+    expect(within(nav).getByRole("link", { name: "Auftragsliste" })).toHaveAttribute(
+      "href",
+      "/werkstatt/auftraege",
+    );
+    expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/werkstatt/dashboard",
+    );
+  });
+
+  it("navigates to the target page when a navigation entry is clicked", async () => {
+    const user = userEvent.setup();
+    renderAt("/termin");
+    const nav = screen.getByRole("navigation", { name: "Hauptnavigation" });
+    await user.click(within(nav).getByRole("link", { name: "Auftragsstatus" }));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Auftragsstatus" }),
+    ).toBeInTheDocument();
+  });
+
+  it("redirects the root path to the customer appointment page", () => {
+    renderAt("/");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Termin anfragen" }),
+    ).toBeInTheDocument();
+  });
+});
