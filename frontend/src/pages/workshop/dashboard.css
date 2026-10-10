@@ -1,0 +1,65 @@
+/* Dashboard (workshop landing screen) — only the classes this page needs.
+   Every colour and length comes from the tokens in theme.css (DESIGN.md). */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
+  border-top-width: 3px;
+  border-top-style: solid;
+}
+
+a.kpi-card,
+a.kpi-card:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.kpi-card__label {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.kpi-card__value {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-card__sub {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.dashboard-card__title {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.dashboard-lists {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.dashboard-list-card__body {
+  color: var(--color-muted);
+  font-size: 15px;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-lists {
+    grid-template-columns: 1fr 1fr;
+  }
+}
