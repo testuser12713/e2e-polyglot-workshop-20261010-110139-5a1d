@@ -78,7 +78,7 @@
           "dev": "${service:db.url}"
         },
         "VALKEY_URL": {
-          "dev": "${service:queue.url}"
+          "dev": "${service:valkey.url}"
         },
         "QUEUE_NAME": {
           "dev": "workshop:invoices"
@@ -106,11 +106,6 @@
       "name": "db",
       "kind": "database",
       "engine": "postgres"
-    },
-    {
-      "name": "queue",
-      "kind": "database",
-      "engine": "valkey"
     },
     {
       "name": "valkey",
