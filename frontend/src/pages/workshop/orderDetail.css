@@ -1,0 +1,273 @@
+/* Order-detail screen styles. Every value comes from the tokens in
+   styles/theme.css (DESIGN.md); nothing is improvised. Kept in its own file so
+   the shared theme stylesheet stays the single cross-ticket surface. */
+
+.od-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.od-order-number {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.od-subtitle {
+  color: var(--color-muted);
+}
+
+.od-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+
+  margin: 0;
+}
+
+.od-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
+}
+
+.od-meta__term {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.od-meta__value {
+  margin: 0;
+  color: var(--color-fg);
+}
+
+.od-meta__item--wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 640px) {
+  .od-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Status stepper (OrderProgress) ------------------------------------------ */
+
+.od-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.od-stepper__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.od-stepper__dot {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.od-stepper__step.is-reached {
+  color: var(--color-fg);
+}
+
+.od-stepper__step.is-reached .od-stepper__dot {
+  background: currentColor;
+  border-color: currentColor;
+}
+
+.od-stepper__step.is-current {
+  font-weight: 600;
+}
+
+.od-stepper__step.is-current .od-stepper__dot {
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
+}
+
+.od-stepper__step[data-status="requested"].is-reached {
+  color: var(--color-status-requested);
+}
+
+.od-stepper__step[data-status="confirmed"].is-reached {
+  color: var(--color-status-confirmed);
+}
+
+.od-stepper__step[data-status="in_progress"].is-reached {
+  color: var(--color-status-in-progress);
+}
+
+.od-stepper__step[data-status="completed"].is-reached {
+  color: var(--color-status-done);
+}
+
+.od-stepper__step[data-status="picked_up"].is-reached {
+  color: var(--color-status-picked-up);
+}
+
+/* Positions --------------------------------------------------------------- */
+
+.od-positions {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.od-positions th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.od-positions th.od-num,
+.od-positions td.od-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.od-positions td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.od-capture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.od-capture__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.od-capture__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.od-capture__row .field {
+  flex: 1 1 160px;
+  margin-bottom: 0;
+}
+
+.od-capture__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .od-capture__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Timeline (Statusverlauf) ------------------------------------------------ */
+
+.od-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.od-timeline__item {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
+
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-border);
+}
+
+.od-timeline__dot {
+  position: absolute;
+  top: 6px;
+  left: -5px;
+
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  background: currentColor;
+}
+
+.od-timeline__dot[data-status="requested"] {
+  color: var(--color-status-requested);
+}
+
+.od-timeline__dot[data-status="confirmed"] {
+  color: var(--color-status-confirmed);
+}
+
+.od-timeline__dot[data-status="in_progress"] {
+  color: var(--color-status-in-progress);
+}
+
+.od-timeline__dot[data-status="completed"] {
+  color: var(--color-status-done);
+}
+
+.od-timeline__dot[data-status="picked_up"] {
+  color: var(--color-status-picked-up);
+}
+
+.od-timeline__time {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.od-timeline__change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.od-timeline__change .status-badge {
+  height: 20px;
+  padding: 2px 8px;
+}
+
+.od-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
