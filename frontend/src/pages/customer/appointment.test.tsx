@@ -82,6 +82,51 @@ describe("AppointmentPage", () => {
     expect(mockApiFetch).not.toHaveBeenCalled();
   });
 
+  it("shows the validation summary and field errors on an incomplete submit, sending nothing", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(
+      screen.queryByText(
+        "Die Anfrage konnte nicht gesendet werden. Bitte prüfen Sie die markierten Felder.",
+      ),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Anfrage senden" }));
+
+    expect(
+      await screen.findByText(
+        "Die Anfrage konnte nicht gesendet werden. Bitte prüfen Sie die markierten Felder.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Code: validation_error")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Dieses Feld ist erforderlich.").length,
+    ).toBeGreaterThan(0);
+    expect(mockApiFetch).not.toHaveBeenCalled();
+  });
+
+  it("clears the validation summary once the form is reset", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: "Anfrage senden" }));
+    expect(
+      await screen.findByText(
+        "Die Anfrage konnte nicht gesendet werden. Bitte prüfen Sie die markierten Felder.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByText(
+          "Die Anfrage konnte nicht gesendet werden. Bitte prüfen Sie die markierten Felder.",
+        ),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("shows an e-mail field error only after the user typed into it", async () => {
     const user = userEvent.setup();
     renderPage();

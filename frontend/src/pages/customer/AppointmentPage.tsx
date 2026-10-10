@@ -117,12 +117,19 @@ function errorMessage(err: ApiError): string {
 export function AppointmentPage() {
   const [values, setValues] = useState<Values>(EMPTY);
   const [touched, setTouched] = useState<Touched>({});
+  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<ServerError | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   const fieldError = (field: FieldName): string =>
     touched[field] ? validate(field, values[field]) : "";
+
+  // Summary alert of the mockup's server-error region: shown only after a
+  // submit attempt while at least one field is still invalid. It disappears on
+  // its own once the user has corrected every field.
+  const invalidFields = FIELDS.filter((field) => validate(field, values[field]) !== "");
+  const showValidationSummary = submitted && invalidFields.length > 0;
 
   function handleChange(field: FieldName, value: string): void {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -136,20 +143,21 @@ export function AppointmentPage() {
   function handleReset(): void {
     setValues(EMPTY);
     setTouched({});
+    setSubmitted(false);
     setServerError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setServerError(null);
+    setSubmitted(true);
 
     const allTouched: Touched = {};
     for (const field of FIELDS) allTouched[field] = true;
     setTouched(allTouched);
 
-    const invalid = FIELDS.filter((field) => validate(field, values[field]) !== "");
-    if (invalid.length > 0) {
-      document.getElementById(invalid[0])?.focus();
+    if (invalidFields.length > 0) {
+      document.getElementById(invalidFields[0])?.focus();
       return;
     }
 
@@ -192,7 +200,8 @@ export function AppointmentPage() {
     <header className="page__header">
       <h1>Termin anfragen</h1>
       <p className="page__description">
-        Füllen Sie die Angaben aus. Nach dem Absenden erhalten Sie eine Auftragsnummer.
+        Füllen Sie die Angaben aus. Nach dem Absenden erhalten Sie eine Bestätigung Ihrer
+        Anfrage.
       </p>
     </header>
   );
@@ -242,6 +251,16 @@ export function AppointmentPage() {
   return (
     <section className="page">
       {pageHeader}
+
+      {showValidationSummary ? (
+        <div className="notice notice--error" role="alert">
+          <span aria-hidden="true">!</span>
+          <div>
+            <p>Die Anfrage konnte nicht gesendet werden. Bitte prüfen Sie die markierten Felder.</p>
+            <p className="notice__code">Code: validation_error</p>
+          </div>
+        </div>
+      ) : null}
 
       {serverError ? (
         <ErrorState
