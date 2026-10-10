@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { CUSTOMER_AREA_ROUTE } from "./components/Nav";
 import { ErrorState } from "./components/states";
 import { RequireWorkshopAuth } from "./auth/RequireWorkshopAuth";
-import { PortalPage } from "./pages/customer/PortalPage";
 import { AppointmentPage } from "./pages/customer/AppointmentPage";
 import { OrderStatusPage } from "./pages/customer/OrderStatusPage";
 import { LoginPage } from "./pages/workshop/LoginPage";
@@ -24,14 +24,16 @@ function NotFoundPage() {
 
 // The complete route table of the contract. Every screen renders inside the
 // shared shell (Layout); the workshop screens sit behind RequireWorkshopAuth,
-// which the login ticket fills with the real guard.
+// which the login ticket fills with the real guard. The root path forwards into
+// the customer area's entry route, the same route the Kundenbereich segment of
+// the header switch targets (AREA_SEGMENTS in Nav.tsx).
 export function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<PortalPage />} />
+        <Route index element={<Navigate to={CUSTOMER_AREA_ROUTE} replace />} />
 
-        <Route path="/termin" element={<AppointmentPage />} />
+        <Route path={CUSTOMER_AREA_ROUTE} element={<AppointmentPage />} />
         <Route path="/auftragsstatus" element={<OrderStatusPage />} />
 
         <Route path="/werkstatt" element={<Navigate to="/werkstatt/dashboard" replace />} />

@@ -64,12 +64,14 @@ describe("customer portal landing", () => {
     }
   });
 
-  it("renders the portal landing as the app's start screen", () => {
+  it("forwards the app's start screen into the customer area", async () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("heading", { level: 1, name: "Kundenportal" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Termin anfragen" }),
+    ).toBeInTheDocument();
   });
 });

@@ -9,11 +9,13 @@ interface NavEntry {
 
 // The area switch is the single control that toggles between the two areas
 // (DESIGN.md, AppShell / Navigation). Each segment navigates to the area's
-// entry route: the customer portal at "/" and the workshop area at
-// "/werkstatt", which App.tsx redirects to its default landing
-// (/werkstatt/dashboard) and RequireWorkshopAuth guards, so a visitor without a
-// session lands on the login screen instead of staying put.
-const CUSTOMER_AREA = "/";
+// entry route: the customer area's entry route (CUSTOMER_AREA_ROUTE, "Termin
+// anfragen") and the workshop area at "/werkstatt", which App.tsx redirects to
+// its default landing (/werkstatt/dashboard) and RequireWorkshopAuth guards, so
+// a visitor without a session lands on the login screen instead of staying put.
+// The root route forwards to this same customer entry route (see App.tsx), so
+// the switch segment and the app root resolve to one page.
+export const CUSTOMER_AREA_ROUTE = "/termin";
 const WORKSHOP_AREA = "/werkstatt";
 
 interface AreaSegment {
@@ -33,7 +35,7 @@ const WORKSHOP_LINKS: NavEntry[] = [
 ];
 
 const AREA_SEGMENTS: AreaSegment[] = [
-  { to: CUSTOMER_AREA, label: "Kundenbereich" },
+  { to: CUSTOMER_AREA_ROUTE, label: "Kundenbereich" },
   { to: WORKSHOP_AREA, label: "Werkstatt" },
 ];
 
